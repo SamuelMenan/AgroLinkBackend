@@ -3,7 +3,11 @@ package com.agrolink.config;
 import com.agrolink.domain.reviews.*;
 import com.agrolink.infrastructure.reviews.InMemoryReviewRepository;
 import com.agrolink.infrastructure.reviews.decorator.LoggingReviewRepository;
+import com.agrolink.infrastructure.supabase.SupabaseClientAdapter;
 import com.agrolink.infrastructure.supabase.SupabaseHttpClient;
+import com.agrolink.infrastructure.supabase.SupabaseRestClient;
+import com.agrolink.infrastructure.supabase.SupabasePostgrestService;
+import com.agrolink.infrastructure.supabase.SupabaseStorageService;
 import com.agrolink.moderation.ModerationRuleFactory;
 import com.agrolink.moderation.ProfanityDictionary;
 import com.agrolink.notifications.DefaultNotificationFactory;
@@ -12,6 +16,9 @@ import com.agrolink.shared.DefaultTimeProvider;
 import com.agrolink.shared.TimeProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig {
@@ -38,16 +45,19 @@ public class WebConfig {
 		return new LoggingReviewRepository(new InMemoryReviewRepository());
 	}
 
-	// Using in-memory persistence by default; swap for Supabase adapter in prod
+	// Using in-memory persistence by default; if SUPABASE_URL and SUPABASE_SERVICE_KEY are present,
+	// wire the Supabase adapter automatically.
 	@Bean
 	public ReviewPersistence reviewPersistence() {
-		// Placeholder: In-memory path handled inside service via repository; adapter example below
-		// return new SupabaseClientAdapter(realSupabaseHttpClient());
+		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+		String url = value(dotenv,"SUPABASE_URL");
+		String key = value(dotenv,"SUPABASE_SERVICE_KEY");
+		if (url != null && !url.isBlank() && key != null && !key.isBlank()) {
+			SupabaseHttpClient client = new SupabaseRestClient(url, key);
+			return new SupabaseClientAdapter(client);
+		}
 		return review -> { /* no-op persistence for now, repository acts as storage */ };
 	}
-
-	// Example client bean if integrating Supabase later
-	public SupabaseHttpClient realSupabaseHttpClient() { return (table, payload) -> { /* call external */ }; }
 
 	@Bean
 	public ReviewService reviewService(ReviewModerationPipeline pipeline,
@@ -64,4 +74,53 @@ public class WebConfig {
 														   ReviewRepository reviewRepository) {
 		return new com.agrolink.facade.ReviewsFacade(reviewService, reviewRepository);
 	}
+
+	@Bean
+	public SupabasePostgrestService supabasePostgrestService() {
+		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+		String url = value(dotenv,"SUPABASE_URL");
+		String anon = value(dotenv,"SUPABASE_ANON_KEY");
+		String service = value(dotenv,"SUPABASE_SERVICE_KEY");
+		if (url == null || url.isBlank() || anon == null || anon.isBlank() || service == null || service.isBlank()) {
+			System.err.println("[WARN] Supabase PostgREST no configurado: define SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_KEY. Se usarán respuestas 503.");
+			return new SupabasePostgrestService("", "", "");
+		}
+		return new SupabasePostgrestService(url, anon, service);
+	}
+
+	@Bean
+	public SupabaseStorageService supabaseStorageService() {
+		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+		String url = value(dotenv,"SUPABASE_URL");
+		String service = value(dotenv,"SUPABASE_SERVICE_KEY");
+		if (url == null || url.isBlank() || service == null || service.isBlank()) {
+			System.err.println("[WARN] Supabase Storage no configurado: define SUPABASE_URL y SUPABASE_SERVICE_KEY. Se devolverán respuestas 503.");
+			return new SupabaseStorageService("", "");
+		}
+		return new SupabaseStorageService(url, service);
+	}
+
+	@Bean
+	public WebMvcConfigurer corsConfigurer() {
+		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+		String origin = firstNonBlank(dotenv.get("FRONTEND_ORIGIN"), "http://localhost:5174");
+		return new WebMvcConfigurer() {
+			@Override
+			public void addCorsMappings(CorsRegistry registry) {
+				registry.addMapping("/api/**")
+						.allowedOrigins(origin)
+						.allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
+						.allowedHeaders("*")
+						.allowCredentials(true);
+			}
+		};
+	}
+    // Helpers to unify null/blank handling with Dotenv
+    private static String value(Dotenv d, String key) {
+        String v = d.get(key);
+        return v == null ? "" : v.trim();
+    }
+    private static String firstNonBlank(String v, String def) {
+        return (v == null || v.isBlank()) ? def : v.trim();
+    }
 }
