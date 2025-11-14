@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1//products")
+@RequestMapping("/api/v1/products")
 public class ProductsController {
     private final SupabasePostgrestService postgrest;
 

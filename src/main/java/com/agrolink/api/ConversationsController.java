@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1//conversations")
+@RequestMapping("/api/v1/conversations")
 public class ConversationsController {
     private final SupabasePostgrestService postgrest;
 
@@ -18,6 +18,14 @@ public class ConversationsController {
     public ResponseEntity<String> create(@RequestHeader(value = "Authorization", required = false) String auth) {
         // empty payload lets Supabase default columns (id UUID default, created_at NOW())
         return postgrest.insert("conversations", Map.of(), auth);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<String> getById(@RequestHeader(value = "Authorization", required = false) String auth,
+                                          @PathVariable String id) {
+        // Return first row matching id (OK if array)
+        String query = "id=eq." + id + "&limit=1";
+        return postgrest.get("conversations", query, auth);
     }
 
     @PostMapping("/{id}/participants")
@@ -30,6 +38,14 @@ public class ConversationsController {
                 "user_id", body.get("user_id")
         );
         return postgrest.insert("conversation_participants", payload, auth);
+    }
+
+    @GetMapping("/{id}/participants")
+    public ResponseEntity<String> listParticipants(@RequestHeader(value = "Authorization", required = false) String auth,
+                                                   @PathVariable String id) {
+        // Return only user_id for participants of the conversation
+        String query = "select=user_id&conversation_id=eq." + id;
+        return postgrest.get("conversation_participants", query, auth);
     }
 
     @GetMapping("/by-user/{userId}")

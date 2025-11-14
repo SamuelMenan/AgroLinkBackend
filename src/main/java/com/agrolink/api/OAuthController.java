@@ -1,35 +1,22 @@
 package com.agrolink.api;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Backend proxy initiator for Supabase OAuth providers.
- * Frontend calls /api/v1/auth/oauth/start?provider=google&next=/simple
- * We generate a state, store mapping, and redirect (302) the browser to Supabase authorize.
- * Callback currently returns tokens in URL fragment (#) which the backend cannot read.
- * Frontend should still parse fragment at /oauth/callback. This removes Supabase URL usage from source code.
- * A full server-side code exchange would require configuring Supabase for PKCE/code flow.
- */
 @RestController
-@RequestMapping("/api/v1//auth/oauth")
+@RequestMapping("/api/v1/auth/oauth")
 public class OAuthController {
-
-    private static final Map<String, String> STATE_NEXT = new ConcurrentHashMap<>();
 
     @GetMapping("/start")
     public void start(@RequestParam String provider,
@@ -37,6 +24,10 @@ public class OAuthController {
                       HttpServletResponse response) throws IOException {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
         String supabaseUrl = trim(dotenv.get("SUPABASE_URL"));
+        String frontendOrigin = trim(dotenv.get("FRONTEND_ORIGIN"));
+        if (frontendOrigin.isBlank()) {
+            frontendOrigin = "http://localhost:5174"; // fallback dev
+        }
         if (supabaseUrl.isBlank()) {
             response.sendError(HttpStatus.SERVICE_UNAVAILABLE.value(), "Supabase URL no configurado");
             return;
@@ -45,22 +36,87 @@ public class OAuthController {
             response.sendError(HttpStatus.BAD_REQUEST.value(), "Proveedor no soportado");
             return;
         }
-        String state = UUID.randomUUID().toString();
         String nextPath = (next == null || next.isBlank()) ? "/simple" : next;
-        STATE_NEXT.put(state, nextPath);
-        // We keep frontend callback to process fragment tokens.
-        String callback = buildFrontendCallback(nextPath, state);
+        // Build callback WITHOUT custom state param to avoid Supabase bad_oauth_state (Supabase manages its own state)
+        String callback = buildFrontendCallback(frontendOrigin, nextPath);
         String authorizeUrl = supabaseUrl + "/auth/v1/authorize?provider=" +
-                url(provider) + "&redirect_to=" + url(callback) + "&state=" + url(state);
+                url(provider) + "&redirect_to=" + url(callback);
         response.setStatus(HttpStatus.FOUND.value());
         response.setHeader("Location", authorizeUrl);
     }
 
+    @PostMapping("/exchange")
+    public ResponseEntity<?> exchangeCode(@RequestBody Map<String, String> body) {
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        String supabaseUrl = trim(dotenv.get("SUPABASE_URL"));
+        String serviceKey = trim(dotenv.get("SUPABASE_SERVICE_KEY"));
+        if (supabaseUrl.isBlank() || serviceKey.isBlank()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "Supabase no configurado para intercambio de código"));
+        }
+
+        String code = trim(body.get("code"));
+        if (code.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "code requerido"));
+        }
+
+        String redirectUri = trim(body.get("redirectUri"));
+        if (redirectUri.isBlank()) {
+            // Fallback razonable: frontend callback sin query params
+            String frontendOrigin = trim(dotenv.get("FRONTEND_ORIGIN"));
+            if (frontendOrigin.isBlank()) {
+                frontendOrigin = "http://localhost:5174";
+            }
+            redirectUri = UriComponentsBuilder.fromHttpUrl(frontendOrigin)
+                    .path("/oauth/callback")
+                    .build()
+                    .toUriString();
+        }
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            URI tokenUri = URI.create(supabaseUrl + "/auth/v1/token?grant_type=authorization_code");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", serviceKey);
+            headers.set("Authorization", "Bearer " + serviceKey);
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("code", code);
+            payload.put("redirect_uri", redirectUri);
+
+                HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
+                @SuppressWarnings("unchecked")
+                ResponseEntity<Map<String, Object>> resp = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>)
+                    restTemplate.exchange(tokenUri, HttpMethod.POST, requestEntity, Map.class);
+
+                Map<String, Object> bodyMap = resp.getBody();
+            if (!resp.getStatusCode().is2xxSuccessful() || bodyMap == null) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body(Map.of("error", "Fallo al intercambiar código en Supabase"));
+            }
+            Map<String, Object> result = new HashMap<>();
+            // Campos estándar de Supabase
+            result.put("access_token", bodyMap.get("access_token"));
+            result.put("refresh_token", bodyMap.get("refresh_token"));
+            result.put("expires_in", bodyMap.get("expires_in"));
+            result.put("token_type", bodyMap.get("token_type"));
+            if (bodyMap.containsKey("user")) {
+                result.put("user", bodyMap.get("user"));
+            }
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(Map.of("error", "Excepción intercambiando código: " + e.getMessage()));
+        }
+    }
+
+    // Deprecated: state resolution no longer needed; Supabase implicit flow does not echo custom state reliably.
     @GetMapping("/state-next")
-    public ResponseEntity<String> resolve(@RequestParam String state) {
-        String next = STATE_NEXT.get(state);
-        if (next == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("state desconocido");
-        return ResponseEntity.ok(next);
+    public ResponseEntity<String> resolve() {
+        return ResponseEntity.status(HttpStatus.GONE).body("state mapping removido");
     }
 
     private static boolean isAllowedProvider(String p) {
@@ -70,16 +126,19 @@ public class OAuthController {
         };
     }
 
-    private static String buildFrontendCallback(String next, String state) {
-        // Frontend route processes tokens; include next & state for validation if desired.
-        String origin = "http://localhost:5174"; // Could be ENV FRONTEND_ORIGIN
+    private static String buildFrontendCallback(String origin, String next) {
         UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(origin)
                 .path("/oauth/callback")
-                .queryParam("next", next)
-                .queryParam("state", state);
+                .queryParam("next", next);
         return b.build().toUriString();
     }
 
     private static String trim(String v) { return v == null ? "" : v.trim(); }
     private static String url(String v) { return URLEncoder.encode(v, StandardCharsets.UTF_8); }
+
+    public static String getOAuthStartUrl(String provider, String next) {
+        return "http://localhost:8080/api/v1/auth/oauth/start?provider=" + 
+            URLEncoder.encode(provider, StandardCharsets.UTF_8) + 
+            "&next=" + URLEncoder.encode(next, StandardCharsets.UTF_8);
+    }
 }
