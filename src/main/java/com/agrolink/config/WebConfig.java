@@ -107,7 +107,7 @@ public class WebConfig {
 		return new WebMvcConfigurer() {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/api/**")
+				registry.addMapping("/api/v1/**")
 						.allowedOrigins(origin)
 						.allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
 						.allowedHeaders("*")

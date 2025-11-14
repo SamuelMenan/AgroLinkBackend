@@ -10,6 +10,7 @@ com\agrolink\api\OrdersController.class
 com\agrolink\infrastructure\reviews\InMemoryReviewPersistence.class
 com\agrolink\notifications\impl\EmailReviewNotifier.class
 com\agrolink\notifications\impl\InAppOrderNotifier.class
+com\agrolink\api\RootController.class
 com\agrolink\infrastructure\security\EncryptionService$EncryptionResult.class
 com\agrolink\moderation\rules\ProfanitySanitizerRule.class
 com\agrolink\infrastructure\supabase\SupabaseHttpClient.class
@@ -48,6 +49,7 @@ com\agrolink\notifications\NotificationFactory.class
 com\agrolink\domain\reviews\ReviewDraftBuilder.class
 com\agrolink\api\NotificationsController.class
 com\agrolink\facade\ReviewsFacade.class
+com\agrolink\api\OAuthController.class
 com\agrolink\config\WebConfig$1.class
 com\agrolink\domain\reviews\ReviewDraftPrototype.class
 com\agrolink\domain\products\package-info.class

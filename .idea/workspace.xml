@@ -4,14 +4,44 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="77f084e7-9f01-4d60-97fa-01ff1ee07323" name="Changes" comment="" />
+    <list default="true" id="77f084e7-9f01-4d60-97fa-01ff1ee07323" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/ConversationsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/ConversationsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/MessagesController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/MessagesController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/NotificationsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/NotificationsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/OAuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/OAuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/OrdersController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/OrdersController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/ProductsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/ProductsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/ReviewsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/ReviewsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/api/StorageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/api/StorageController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/agrolink/config/WebConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/agrolink/config/WebConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/agrolink-backend-0.0.1-SNAPSHOT.jar" beforeDir="false" afterPath="$PROJECT_DIR$/target/agrolink-backend-0.0.1-SNAPSHOT.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/agrolink-backend-0.0.1-SNAPSHOT.jar.original" beforeDir="false" afterPath="$PROJECT_DIR$/target/agrolink-backend-0.0.1-SNAPSHOT.jar.original" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/AuthController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/AuthController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/ConversationsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/ConversationsController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/MessagesController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/MessagesController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/NotificationsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/NotificationsController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/OAuthController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/OAuthController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/OrdersController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/OrdersController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/ProductsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/ProductsController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/ReviewsController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/ReviewsController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/api/StorageController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/api/StorageController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/config/WebConfig$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/config/WebConfig$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/TEST-com.agrolink.infrastructure.supabase.SupabaseClientAdapterTest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/target/surefire-reports/TEST-com.agrolink.infrastructure.supabase.SupabaseClientAdapterTest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/surefire-reports/com.agrolink.infrastructure.supabase.SupabaseClientAdapterTest.txt" beforeDir="false" afterPath="$PROJECT_DIR$/target/surefire-reports/com.agrolink.infrastructure.supabase.SupabaseClientAdapterTest.txt" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
@@ -21,22 +51,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Application.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/sam10/OneDrive/Documentos/AgroLink/AgroLinkBackend",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Application.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/sam10/OneDrive/Documentos/AgroLink/AgroLinkBackend&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Application" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.agrolink.Application" />
