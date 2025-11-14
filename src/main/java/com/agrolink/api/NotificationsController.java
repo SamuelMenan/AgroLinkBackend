@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/v1/v1/notifications")
 public class NotificationsController {
     private final SupabasePostgrestService postgrest;
 

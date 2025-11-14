@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/messages")
+@RequestMapping("/api/v1/v1/messages")
 public class MessagesController {
     private final SupabasePostgrestService postgrest;
     private final EncryptionService encryptionService;

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/conversations")
+@RequestMapping("/api/v1/v1/conversations")
 public class ConversationsController {
     private final SupabasePostgrestService postgrest;
 

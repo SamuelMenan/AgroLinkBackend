@@ -19,14 +19,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Backend proxy initiator for Supabase OAuth providers.
- * Frontend calls /api/auth/oauth/start?provider=google&next=/simple
+ * Frontend calls /api/v1/auth/oauth/start?provider=google&next=/simple
  * We generate a state, store mapping, and redirect (302) the browser to Supabase authorize.
  * Callback currently returns tokens in URL fragment (#) which the backend cannot read.
  * Frontend should still parse fragment at /oauth/callback. This removes Supabase URL usage from source code.
  * A full server-side code exchange would require configuring Supabase for PKCE/code flow.
  */
 @RestController
-@RequestMapping("/api/auth/oauth")
+@RequestMapping("/api/v1/v1/auth/oauth")
 public class OAuthController {
 
     private static final Map<String, String> STATE_NEXT = new ConcurrentHashMap<>();

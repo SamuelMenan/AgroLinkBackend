@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/storage")
+@RequestMapping("/api/v1/v1/storage")
 public class StorageController {
     private final SupabaseStorageService storage;
 
