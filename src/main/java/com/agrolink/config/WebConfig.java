@@ -102,16 +102,13 @@ public class WebConfig {
 
 	@Bean
 	public WebMvcConfigurer corsConfigurer() {
-		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-		String origin = firstNonBlank(dotenv.get("FRONTEND_ORIGIN"), "http://localhost:5174");
 		return new WebMvcConfigurer() {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/api/v1/**")
-						.allowedOrigins(origin)
-						.allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
-						.allowedHeaders("*")
-						.allowCredentials(true);
+				registry.addMapping("/**")
+						.allowedOrigins("https://agro-link-jet.vercel.app")
+						.allowedMethods("GET", "POST", "PUT", "DELETE")
+						.allowedHeaders("*");
 			}
 		};
 	}

@@ -12,6 +12,8 @@ import org.springframework.web.client.RestClientResponseException;
 import java.util.Map;
 import io.github.cdimascio.dotenv.Dotenv;
 
+import com.agrolink.api.dto.UserDto;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -74,5 +76,11 @@ public class AuthController {
     public ResponseEntity<String> refresh(@RequestBody Map<String, Object> payload) {
         String url = baseUrl + "/auth/v1/token?grant_type=refresh_token";
         return forwardPost(url, payload);
+    }
+
+    @PostMapping("/auth/register")
+    public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
+        // Lógica para registrar usuario
+        return ResponseEntity.ok("Usuario registrado exitosamente");
     }
 }
