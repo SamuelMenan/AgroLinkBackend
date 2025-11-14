@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * A full server-side code exchange would require configuring Supabase for PKCE/code flow.
  */
 @RestController
-@RequestMapping("/api/v1/v1/auth/oauth")
+@RequestMapping("/api/v1//auth/oauth")
 public class OAuthController {
 
     private static final Map<String, String> STATE_NEXT = new ConcurrentHashMap<>();

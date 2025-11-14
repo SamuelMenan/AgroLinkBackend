@@ -13,7 +13,7 @@ import java.util.Map;
 import io.github.cdimascio.dotenv.Dotenv;
 
 @RestController
-@RequestMapping("/api/v1/v1/auth")
+@RequestMapping("/api/v1//auth")
 public class AuthController {
     private final String baseUrl;
     private final String anonKey;
