@@ -1,11 +1,14 @@
 package com.agrolink.infrastructure.supabase;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
 public class SupabasePostgrestService {
+    private static final Logger log = LoggerFactory.getLogger(SupabasePostgrestService.class);
     private final String baseUrl;
     private final String anonKey;
     private final String serviceKey;
@@ -26,12 +29,13 @@ public class SupabasePostgrestService {
         headers.set("Prefer", "return=representation");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
         try {
+            log.debug("[SupabasePostgrestService] POST {}", baseUrl + "/rest/v1/" + table);
             return rest.postForEntity(baseUrl + "/rest/v1/" + table, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
-            System.err.println("[SupabasePostgrestService] insert error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
+            log.error("[SupabasePostgrestService] insert error (RestClientResponseException): status={} body={}", e.getStatusCode().value(), e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] insert error: " + e.getClass().getName() + " -> " + e.getMessage());
+            log.error("[SupabasePostgrestService] insert error: {} -> {}", e.getClass().getName(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST insert error: " + e.getMessage());
         }
     }
@@ -45,13 +49,13 @@ public class SupabasePostgrestService {
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         String url = baseUrl + "/rest/v1/" + table + (query == null || query.isBlank() ? "" : (query.startsWith("?") ? query : ("?" + query)));
         try {
+            log.debug("[SupabasePostgrestService] GET {}", url);
             return rest.exchange(url, HttpMethod.GET, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
-            System.err.println("[SupabasePostgrestService] get error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
+            log.error("[SupabasePostgrestService] get error (RestClientResponseException): status={} body={}", e.getStatusCode().value(), e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] get error: " + e.getClass().getName() + " -> " + e.getMessage());
-            e.printStackTrace();
+            log.error("[SupabasePostgrestService] get error: {} -> {}", e.getClass().getName(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST get error: " + e.getMessage());
         }
     }
@@ -66,12 +70,13 @@ public class SupabasePostgrestService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
         String url = baseUrl + "/rest/v1/" + table + buildFilterQuery(filters);
         try {
+            log.debug("[SupabasePostgrestService] PATCH {}", url);
             return rest.exchange(url, HttpMethod.PATCH, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
-            System.err.println("[SupabasePostgrestService] update error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
+            log.error("[SupabasePostgrestService] update error (RestClientResponseException): status={} body={}", e.getStatusCode().value(), e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] update error: " + e.getClass().getName() + " -> " + e.getMessage());
+            log.error("[SupabasePostgrestService] update error: {} -> {}", e.getClass().getName(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST update error: " + e.getMessage());
         }
     }
@@ -85,12 +90,13 @@ public class SupabasePostgrestService {
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         String url = baseUrl + "/rest/v1/" + table + buildFilterQuery(filters);
         try {
+            log.debug("[SupabasePostgrestService] DELETE {}", url);
             return rest.exchange(url, HttpMethod.DELETE, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
-            System.err.println("[SupabasePostgrestService] delete error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
+            log.error("[SupabasePostgrestService] delete error (RestClientResponseException): status={} body={}", e.getStatusCode().value(), e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] delete error: " + e.getClass().getName() + " -> " + e.getMessage());
+            log.error("[SupabasePostgrestService] delete error: {} -> {}", e.getClass().getName(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST delete error: " + e.getMessage());
         }
     }
