@@ -23,7 +23,7 @@ public class CorsConfig {
 
                 // Principal API
                 registry.addMapping("/api/**")
-                        .allowedOrigins(frontProd, frontDev)
+                    .allowedOriginPatterns(frontProd, frontDev, "https://*.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .exposedHeaders("Content-Disposition")
@@ -31,7 +31,7 @@ public class CorsConfig {
 
                 // Actuator y salud (para warm‑up y monitoreo desde frontend / edge)
                 registry.addMapping("/actuator/**")
-                        .allowedOrigins(frontProd, frontDev)
+                    .allowedOriginPatterns(frontProd, frontDev, "https://*.vercel.app")
                         .allowedMethods("GET", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(false);
