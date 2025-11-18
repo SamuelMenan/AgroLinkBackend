@@ -48,8 +48,8 @@ public class WebConfig {
 	@Bean
 	public ReviewPersistence reviewPersistence() {
 		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-		String url = value(dotenv,"SUPABASE_URL");
-		String key = value(dotenv,"SUPABASE_SERVICE_KEY");
+		String url = getenv(dotenv,"SUPABASE_URL");
+		String key = getenv(dotenv,"SUPABASE_SERVICE_KEY");
 		if (url != null && !url.isBlank() && key != null && !key.isBlank()) {
 			SupabaseHttpClient client = new SupabaseRestClient(url, key);
 			return new SupabaseClientAdapter(client);
@@ -76,9 +76,9 @@ public class WebConfig {
 	@Bean
 	public SupabasePostgrestService supabasePostgrestService() {
 		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-		String url = value(dotenv,"SUPABASE_URL");
-		String anon = value(dotenv,"SUPABASE_ANON_KEY");
-		String service = value(dotenv,"SUPABASE_SERVICE_KEY");
+		String url = getenv(dotenv,"SUPABASE_URL");
+		String anon = getenv(dotenv,"SUPABASE_ANON_KEY");
+		String service = getenv(dotenv,"SUPABASE_SERVICE_KEY");
 		if (url == null || url.isBlank() || anon == null || anon.isBlank() || service == null || service.isBlank()) {
 			System.err.println("[WARN] Supabase PostgREST no configurado: define SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_KEY. Se usarán respuestas 503.");
 			return new SupabasePostgrestService("", "", "");
@@ -89,8 +89,8 @@ public class WebConfig {
 	@Bean
 	public SupabaseStorageService supabaseStorageService() {
 		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-		String url = value(dotenv,"SUPABASE_URL");
-		String service = value(dotenv,"SUPABASE_SERVICE_KEY");
+		String url = getenv(dotenv,"SUPABASE_URL");
+		String service = getenv(dotenv,"SUPABASE_SERVICE_KEY");
 		if (url == null || url.isBlank() || service == null || service.isBlank()) {
 			System.err.println("[WARN] Supabase Storage no configurado: define SUPABASE_URL y SUPABASE_SERVICE_KEY. Se devolverán respuestas 503.");
 			return new SupabaseStorageService("", "");
@@ -101,7 +101,7 @@ public class WebConfig {
 	@Bean
 	// CORS is configured in CorsConfig to avoid duplicate bean definitions.
     // Helpers to unify null/blank handling with Dotenv
-    private static String value(Dotenv d, String key) {
+	private static String getenv(Dotenv d, String key) {
         String v = d.get(key);
         return v == null ? "" : v.trim();
     }
