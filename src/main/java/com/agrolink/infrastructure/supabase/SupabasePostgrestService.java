@@ -25,7 +25,13 @@ public class SupabasePostgrestService {
         HttpHeaders headers = baseHeaders(userBearer);
         headers.set("Prefer", "return=representation");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
-        return rest.postForEntity(baseUrl + "/rest/v1/" + table, entity, String.class);
+        try {
+            return rest.postForEntity(baseUrl + "/rest/v1/" + table, entity, String.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST insert error: " + e.getMessage());
+        }
     }
 
     public ResponseEntity<String> get(String table, String query, String userBearer) {
@@ -33,9 +39,15 @@ public class SupabasePostgrestService {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Supabase PostgREST no configurado");
         }
         HttpHeaders headers = baseHeaders(userBearer);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
         String url = baseUrl + "/rest/v1/" + table + (query == null || query.isBlank() ? "" : (query.startsWith("?") ? query : ("?" + query)));
-        return rest.exchange(url, HttpMethod.GET, entity, String.class);
+        try {
+            return rest.exchange(url, HttpMethod.GET, entity, String.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST get error: " + e.getMessage());
+        }
     }
 
     public ResponseEntity<String> update(String table, Map<String, Object> payload, String filters, String userBearer) {
@@ -46,7 +58,13 @@ public class SupabasePostgrestService {
         headers.set("Prefer", "return=representation");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
         String url = baseUrl + "/rest/v1/" + table + buildFilterQuery(filters);
-        return rest.exchange(url, HttpMethod.PATCH, entity, String.class);
+        try {
+            return rest.exchange(url, HttpMethod.PATCH, entity, String.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST update error: " + e.getMessage());
+        }
     }
 
     public ResponseEntity<String> delete(String table, String filters, String userBearer) {
@@ -54,9 +72,15 @@ public class SupabasePostgrestService {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Supabase PostgREST no configurado");
         }
         HttpHeaders headers = baseHeaders(userBearer);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
         String url = baseUrl + "/rest/v1/" + table + buildFilterQuery(filters);
-        return rest.exchange(url, HttpMethod.DELETE, entity, String.class);
+        try {
+            return rest.exchange(url, HttpMethod.DELETE, entity, String.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST delete error: " + e.getMessage());
+        }
     }
 
     private String buildFilterQuery(String filters) {
