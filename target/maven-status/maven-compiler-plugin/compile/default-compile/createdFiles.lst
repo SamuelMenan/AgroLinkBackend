@@ -43,7 +43,6 @@ com\agrolink\infrastructure\supabase\SupabaseStorageService.class
 com\agrolink\api\MessagesController.class
 com\agrolink\infrastructure\reviews\decorator\ReviewRepositoryDecorator.class
 com\agrolink\api\ConversationsController.class
-com\agrolink\api\AuthController.class
 com\agrolink\moderation\ModerationRuleFactory.class
 com\agrolink\notifications\NotificationFactory.class
 com\agrolink\domain\reviews\ReviewDraftBuilder.class
