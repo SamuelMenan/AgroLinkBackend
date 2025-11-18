@@ -1,35 +1,43 @@
 package com.agrolink.api;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth/oauth")
 public class OAuthController {
 
+    private static String sanitizeNext(String n) {
+        if (n == null || n.isBlank()) return "/simple";
+        if (!n.startsWith("/")) return "/simple";
+        if (n.startsWith("//")) return "/simple";
+        if (n.startsWith("/oauth/callback")) return "/simple";
+        return n;
+    }
+
     @GetMapping("/start")
     public void start(@RequestParam String provider,
                       @RequestParam(required = false, name = "next") String next,
+                      @RequestParam(required = false, name = "redirect_to") String redirectTo,
                       HttpServletResponse response) throws IOException {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
         String supabaseUrl = trim(dotenv.get("SUPABASE_URL"));
         String frontendOriginEnv = trim(dotenv.get("FRONTEND_ORIGIN"));
 
-        // Si no se define FRONTEND_ORIGIN, en producción debes configurarla en Render.
-        // Como fallback mantenemos localhost solo para entorno de desarrollo.
         String frontendOrigin = frontendOriginEnv.isBlank()
-                ? "http://localhost:5174"
+                ? "https://agro-link-jet.vercel.app"
                 : frontendOriginEnv;
 
         if (supabaseUrl.isBlank()) {
@@ -41,12 +49,25 @@ public class OAuthController {
             return;
         }
 
-        String nextPath = (next == null || next.isBlank()) ? "/simple" : next;
-        // Construye callback tipo: https://frontend/origin/oauth/callback?next=...
-        String callback = buildFrontendCallback(frontendOrigin, nextPath);
+        String safeNext = sanitizeNext(next);
+
+        // Base de callback: usar redirect_to si viene del cliente; si no, FRONTEND_ORIGIN
+        String callbackBase = (redirectTo != null && !redirectTo.isBlank())
+                ? redirectTo.trim()
+                : UriComponentsBuilder.fromHttpUrl(frontendOrigin)
+                    .path("/oauth/callback")
+                    .build()
+                    .toUriString();
+
+        // Asegurar que enviamos ?next=... al callback del frontend
+        String finalRedirectTo = UriComponentsBuilder.fromUriString(Objects.requireNonNull(callbackBase))
+                .replaceQuery(null)
+                .queryParam("next", safeNext)
+                .build()
+                .toUriString();
 
         String authorizeUrl = supabaseUrl + "/auth/v1/authorize?provider=" +
-                url(provider) + "&redirect_to=" + url(callback);
+                url(provider) + "&redirect_to=" + url(finalRedirectTo);
 
         response.setStatus(HttpStatus.FOUND.value());
         response.setHeader("Location", authorizeUrl);
@@ -70,10 +91,9 @@ public class OAuthController {
 
         String redirectUri = trim(body.get("redirectUri"));
         if (redirectUri.isBlank()) {
-            // Fallback: usar FRONTEND_ORIGIN o localhost solo en dev
             String frontendOriginEnv = trim(dotenv.get("FRONTEND_ORIGIN"));
             String frontendOrigin = frontendOriginEnv.isBlank()
-                    ? "http://localhost:5174"
+                    ? "https://agro-link-jet.vercel.app"
                     : frontendOriginEnv;
 
             redirectUri = UriComponentsBuilder.fromHttpUrl(frontendOrigin)
@@ -84,7 +104,7 @@ public class OAuthController {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
-            URI tokenUri = URI.create(supabaseUrl + "/auth/v1/token?grant_type=authorization_code");
+            URI tokenUri = URI.create(Objects.requireNonNull(supabaseUrl) + "/auth/v1/token?grant_type=authorization_code");
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -96,7 +116,7 @@ public class OAuthController {
             payload.put("redirect_uri", redirectUri);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
-            @SuppressWarnings("unchecked")
+                @SuppressWarnings({"unchecked", "null"})
             ResponseEntity<Map<String, Object>> resp = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>)
                     restTemplate.exchange(tokenUri, HttpMethod.POST, requestEntity, Map.class);
 
@@ -121,12 +141,6 @@ public class OAuthController {
         }
     }
 
-    // Deprecated: state resolution no longer needed; Supabase implicit flow does not echo custom state reliably.
-    @GetMapping("/state-next")
-    public ResponseEntity<String> resolve() {
-        return ResponseEntity.status(HttpStatus.GONE).body("state mapping removido");
-    }
-
     private static boolean isAllowedProvider(String p) {
         return switch (p.toLowerCase()) {
             case "google", "facebook" -> true;
@@ -134,21 +148,6 @@ public class OAuthController {
         };
     }
 
-    private static String buildFrontendCallback(String origin, String next) {
-        return UriComponentsBuilder.fromHttpUrl(origin)
-                .path("/oauth/callback")
-                .queryParam("next", next)
-                .build()
-                .toUriString();
-    }
-
     private static String trim(String v) { return v == null ? "" : v.trim(); }
     private static String url(String v) { return URLEncoder.encode(v, StandardCharsets.UTF_8); }
-
-    // Método auxiliar de desarrollo; no se usa en producción.
-    public static String getOAuthStartUrl(String provider, String next) {
-        return "http://localhost:8080/api/v1/auth/oauth/start?provider=" +
-                URLEncoder.encode(provider, StandardCharsets.UTF_8) +
-                "&next=" + URLEncoder.encode(next, StandardCharsets.UTF_8);
-    }
 }
