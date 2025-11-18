@@ -28,6 +28,7 @@ public class SupabasePostgrestService {
         try {
             return rest.postForEntity(baseUrl + "/rest/v1/" + table, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
+            System.err.println("[SupabasePostgrestService] insert error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             System.err.println("[SupabasePostgrestService] insert error: " + e.getClass().getName() + " -> " + e.getMessage());
@@ -46,9 +47,11 @@ public class SupabasePostgrestService {
         try {
             return rest.exchange(url, HttpMethod.GET, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
+            System.err.println("[SupabasePostgrestService] get error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             System.err.println("[SupabasePostgrestService] get error: " + e.getClass().getName() + " -> " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST get error: " + e.getMessage());
         }
     }
@@ -65,6 +68,7 @@ public class SupabasePostgrestService {
         try {
             return rest.exchange(url, HttpMethod.PATCH, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
+            System.err.println("[SupabasePostgrestService] update error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             System.err.println("[SupabasePostgrestService] update error: " + e.getClass().getName() + " -> " + e.getMessage());
@@ -83,6 +87,7 @@ public class SupabasePostgrestService {
         try {
             return rest.exchange(url, HttpMethod.DELETE, entity, String.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
+            System.err.println("[SupabasePostgrestService] delete error (RestClientResponseException): status=" + e.getStatusCode().value() + " body=" + e.getResponseBodyAsString());
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             System.err.println("[SupabasePostgrestService] delete error: " + e.getClass().getName() + " -> " + e.getMessage());
