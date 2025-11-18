@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="77f084e7-9f01-4d60-97fa-01ff1ee07323" name="Changes" comment="" />
+    <list default="true" id="77f084e7-9f01-4d60-97fa-01ff1ee07323" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/config/WebConfig$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/agrolink/config/WebConfig.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/agrolink/config/WebConfig.class" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
