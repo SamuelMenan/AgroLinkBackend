@@ -30,10 +30,12 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
+            System.err.println("[SupabasePostgrestService] insert error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST insert error: " + e.getMessage());
         }
     }
 
+    @SuppressWarnings("null")
     public ResponseEntity<String> get(String table, String query, String userBearer) {
         if (baseUrl.isBlank()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Supabase PostgREST no configurado");
@@ -46,10 +48,12 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
+            System.err.println("[SupabasePostgrestService] get error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST get error: " + e.getMessage());
         }
     }
 
+    @SuppressWarnings("null")
     public ResponseEntity<String> update(String table, Map<String, Object> payload, String filters, String userBearer) {
         if (baseUrl.isBlank()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Supabase PostgREST no configurado");
@@ -63,10 +67,12 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
+            System.err.println("[SupabasePostgrestService] update error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST update error: " + e.getMessage());
         }
     }
 
+    @SuppressWarnings("null")
     public ResponseEntity<String> delete(String table, String filters, String userBearer) {
         if (baseUrl.isBlank()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Supabase PostgREST no configurado");
@@ -79,6 +85,7 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
+            System.err.println("[SupabasePostgrestService] delete error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST delete error: " + e.getMessage());
         }
     }

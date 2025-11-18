@@ -23,14 +23,21 @@ public class AuthController {
 
     public AuthController() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-        String url = dotenv.get("SUPABASE_URL");
-        String anon = dotenv.get("SUPABASE_ANON_KEY");
+        String url = resolveEnv(dotenv, "SUPABASE_URL");
+        String anon = resolveEnv(dotenv, "SUPABASE_ANON_KEY");
         this.baseUrl = url == null ? "" : url.trim();
         this.anonKey = anon == null ? "" : anon.trim();
     }
 
     private boolean envConfigured() {
         return !baseUrl.isBlank() && !anonKey.isBlank();
+    }
+
+    private String resolveEnv(Dotenv dotenv, String key) {
+        String sys = System.getenv(key);
+        if (sys != null && !sys.isBlank()) return sys.trim();
+        String dv = dotenv.get(key);
+        return (dv == null || dv.isBlank()) ? null : dv.trim();
     }
 
     private ResponseEntity<String> missingConfig() {
@@ -46,13 +53,14 @@ public class AuthController {
         return new HttpEntity<>(payload, headers);
     }
 
+    @SuppressWarnings("null")
     private ResponseEntity<String> forwardPost(String url, Map<String, Object> payload) {
         if (!envConfigured()) return missingConfig();
         try {
             return rest.postForEntity(url, buildEntity(payload), String.class);
         } catch (RestClientResponseException e) {
             // Propagar código y cuerpo exactos de Supabase (400, 422, etc.) en lugar de 500 genérico
-            return ResponseEntity.status(e.getRawStatusCode())
+            return ResponseEntity.status(e.getStatusCode().value())
                     .body(e.getResponseBodyAsString());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
