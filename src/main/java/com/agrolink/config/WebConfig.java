@@ -83,6 +83,7 @@ public class WebConfig {
 			System.err.println("[WARN] Supabase PostgREST no configurado: define SUPABASE_URL, SUPABASE_ANON_KEY y SUPABASE_SERVICE_KEY. Se usarán respuestas 503.");
 			return new SupabasePostgrestService("", "", "");
 		}
+		System.out.println("[SupabasePostgrestService] Config -> baseUrl=" + url + ", anonKey?=" + (anon != null && !anon.isBlank()) + ", serviceKey?=" + (service != null && !service.isBlank()));
 		return new SupabasePostgrestService(url, anon, service);
 	}
 

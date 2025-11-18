@@ -30,7 +30,7 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] insert error: " + e.getMessage());
+            System.err.println("[SupabasePostgrestService] insert error: " + e.getClass().getName() + " -> " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST insert error: " + e.getMessage());
         }
     }
@@ -48,7 +48,7 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] get error: " + e.getMessage());
+            System.err.println("[SupabasePostgrestService] get error: " + e.getClass().getName() + " -> " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST get error: " + e.getMessage());
         }
     }
@@ -67,7 +67,7 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] update error: " + e.getMessage());
+            System.err.println("[SupabasePostgrestService] update error: " + e.getClass().getName() + " -> " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST update error: " + e.getMessage());
         }
     }
@@ -85,7 +85,7 @@ public class SupabasePostgrestService {
         } catch (org.springframework.web.client.RestClientResponseException e) {
             return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("[SupabasePostgrestService] delete error: " + e.getMessage());
+            System.err.println("[SupabasePostgrestService] delete error: " + e.getClass().getName() + " -> " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("PostgREST delete error: " + e.getMessage());
         }
     }
