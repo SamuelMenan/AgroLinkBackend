@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -78,9 +80,27 @@ public class AuthController {
         return forwardPost(url, payload);
     }
 
-    @PostMapping("/auth/register")
+    /**
+     * NO IMPLEMENTADO: ahora mismo solo devuelve un mensaje fijo.
+     * Endpoint pensado para registrar usuarios en tu propia base de datos.
+     */
+    @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
-        // Lógica para registrar usuario
-        return ResponseEntity.ok("Usuario registrado exitosamente");
+        // TODO: implementar la lógica real de registro (guardar usuario en BD, validar, etc.)
+        return ResponseEntity.ok("Usuario registrado exitosamente (stub: lógica aún no implementada)");
+    }
+
+    /**
+     * NO IMPLEMENTADO: endpoint que el frontend usa para iniciar OAuth con Google u otros providers.
+     * URL esperada:
+     *   GET /api/v1/auth/oauth/start?provider=google&next=...
+     */
+    @GetMapping("/oauth/start")
+    public ResponseEntity<String> startOAuth(@RequestParam String provider,
+                                             @RequestParam String next) {
+        // TODO: implementar redirección real a Supabase OAuth (o al proveedor que uses).
+        String msg = "OAuth start endpoint recibido. provider=" + provider + ", next=" + next +
+                ". Falta implementar redirección a Supabase.";
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(msg);
     }
 }
