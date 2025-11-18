@@ -17,8 +17,6 @@ import com.agrolink.shared.TimeProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import io.github.cdimascio.dotenv.Dotenv;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig {
@@ -101,23 +99,10 @@ public class WebConfig {
 	}
 
 	@Bean
-	public WebMvcConfigurer corsConfigurer() {
-		return new WebMvcConfigurer() {
-			@Override
-			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**")
-						.allowedOrigins("https://agro-link-jet.vercel.app")
-						.allowedMethods("GET", "POST", "PUT", "DELETE")
-						.allowedHeaders("*");
-			}
-		};
-	}
+	// CORS is configured in CorsConfig to avoid duplicate bean definitions.
     // Helpers to unify null/blank handling with Dotenv
     private static String value(Dotenv d, String key) {
         String v = d.get(key);
         return v == null ? "" : v.trim();
-    }
-    private static String firstNonBlank(String v, String def) {
-        return (v == null || v.isBlank()) ? def : v.trim();
     }
 }
