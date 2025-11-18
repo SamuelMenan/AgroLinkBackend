@@ -24,6 +24,7 @@ com\agrolink\infrastructure\security\EncryptionService.class
 com\agrolink\infrastructure\supabase\SupabaseRestClient.class
 com\agrolink\moderation\RuleType.class
 com\agrolink\Application.class
+com\agrolink\config\EnvUtils.class
 com\agrolink\infrastructure\reviews\InMemoryReviewRepository.class
 com\agrolink\api\ProductsController.class
 com\agrolink\domain\reviews\ReviewService.class
@@ -49,7 +50,6 @@ com\agrolink\domain\reviews\ReviewDraftBuilder.class
 com\agrolink\api\NotificationsController.class
 com\agrolink\facade\ReviewsFacade.class
 com\agrolink\api\OAuthController.class
-com\agrolink\config\WebConfig$1.class
 com\agrolink\domain\reviews\ReviewDraftPrototype.class
 com\agrolink\domain\products\package-info.class
 com\agrolink\api\ReviewsController.class
