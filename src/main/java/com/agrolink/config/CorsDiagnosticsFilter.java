@@ -20,7 +20,7 @@ import java.util.Optional;
  * Diagnóstico adicional: detecta casos donde Origin presente pero falta ACAO.
  */
 @Component
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order(Ordered.LOWEST_PRECEDENCE - 1)
 public class CorsDiagnosticsFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(CorsDiagnosticsFilter.class);
 
