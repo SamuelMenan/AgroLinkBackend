@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.util.Map;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -19,7 +20,7 @@ import com.agrolink.api.dto.UserDto;
 public class AuthController {
     private final String baseUrl;
     private final String anonKey;
-    private final RestTemplate rest = new RestTemplate();
+    private final RestTemplate rest;
 
     public AuthController() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -27,6 +28,10 @@ public class AuthController {
         String anon = resolveEnv(dotenv, "SUPABASE_ANON_KEY");
         this.baseUrl = url == null ? "" : url.trim();
         this.anonKey = anon == null ? "" : anon.trim();
+        SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
+        rf.setConnectTimeout(5000);
+        rf.setReadTimeout(10000);
+        this.rest = new RestTemplate(rf);
     }
 
     private boolean envConfigured() {
@@ -57,12 +62,22 @@ public class AuthController {
     private ResponseEntity<String> forwardPost(String url, Map<String, Object> payload) {
         if (!envConfigured()) return missingConfig();
         try {
-            return rest.postForEntity(url, buildEntity(payload), String.class);
+            long start = System.currentTimeMillis();
+            ResponseEntity<String> resp = rest.postForEntity(url, buildEntity(payload), String.class);
+            long took = System.currentTimeMillis() - start;
+            String path = url.replaceFirst("https?://[^/]+", "");
+            // No loggear tokens; sólo meta-información
+            System.out.println("[AuthController] POST " + path + " -> status=" + resp.getStatusCode().value() + " in " + took + "ms");
+            return resp;
         } catch (RestClientResponseException e) {
+            String path = url.replaceFirst("https?://[^/]+", "");
+            System.err.println("[AuthController] POST " + path + " error status=" + e.getStatusCode().value() + " bodyLen=" + (e.getResponseBodyAsString()!=null? e.getResponseBodyAsString().length():0));
             // Propagar código y cuerpo exactos de Supabase (400, 422, etc.) en lugar de 500 genérico
             return ResponseEntity.status(e.getStatusCode().value())
                     .body(e.getResponseBodyAsString());
         } catch (Exception e) {
+            String path = url.replaceFirst("https?://[^/]+", "");
+            System.err.println("[AuthController] POST " + path + " exception: " + e.getClass().getSimpleName() + " -> " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Auth proxy error: " + e.getMessage());
         }

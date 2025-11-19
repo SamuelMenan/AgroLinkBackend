@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.util.Map;
 
@@ -18,7 +19,10 @@ public class SupabasePostgrestService {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.anonKey = anonKey;
         this.serviceKey = serviceKey;
-        this.rest = new RestTemplate();
+        SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
+        rf.setConnectTimeout(5000);
+        rf.setReadTimeout(10000);
+        this.rest = new RestTemplate(rf);
     }
 
     public ResponseEntity<String> insert(String table, Map<String, Object> payload, String userBearer) {
