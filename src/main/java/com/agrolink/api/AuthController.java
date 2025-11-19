@@ -107,7 +107,6 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
-        // TODO: implementar la lógica real de registro (guardar usuario en BD, validar, etc.)
         return ResponseEntity.ok("Usuario registrado exitosamente (stub: lógica aún no implementada)");
     }
 
