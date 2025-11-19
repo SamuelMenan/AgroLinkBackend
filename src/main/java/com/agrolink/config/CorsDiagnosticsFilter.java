@@ -56,12 +56,8 @@ public class CorsDiagnosticsFilter extends OncePerRequestFilter {
         String acao = response.getHeader("Access-Control-Allow-Origin");
         if (origin != null && acao == null) {
             if (isAllowedOrigin(origin)) {
-                // Auto parcheo de cabeceras CORS faltantes
-                response.setHeader("Access-Control-Allow-Origin", origin);
-                response.setHeader("Access-Control-Allow-Credentials", "true");
-                response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-                response.addHeader("Vary", "Origin");
-                log.warn("[CORS-DIAG] Missing ACAO patched. method={} path={} origin={}", request.getMethod(), request.getRequestURI(), origin);
+                // Solo diagnóstico: no parchear respuestas post-commit para evitar inconsistencias
+                log.warn("[CORS-DIAG] Origin allowed but ACAO missing (no patch applied). method={} path={} origin={}", request.getMethod(), request.getRequestURI(), origin);
             } else {
                 log.warn("[CORS-DIAG] Origin present but no ACAO header (not allowed). method={} path={} origin={}", request.getMethod(), request.getRequestURI(), origin);
             }

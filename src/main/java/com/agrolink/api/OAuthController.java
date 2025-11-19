@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -103,7 +104,10 @@ public class OAuthController {
         }
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
+            SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
+            rf.setConnectTimeout(5000);
+            rf.setReadTimeout(10000);
+            RestTemplate restTemplate = new RestTemplate(rf);
             URI tokenUri = URI.create(Objects.requireNonNull(supabaseUrl) + "/auth/v1/token?grant_type=authorization_code");
 
             HttpHeaders headers = new HttpHeaders();
