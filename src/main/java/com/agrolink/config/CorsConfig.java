@@ -3,9 +3,7 @@ package com.agrolink.config;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.lang.NonNull;
+// Removed WebMvcConfigurer CORS; using only global CorsFilter for consistency.
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.cors.CorsConfiguration;
@@ -17,32 +15,7 @@ import java.util.Optional;
 @Configuration
 public class CorsConfig {
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(@NonNull final CorsRegistry registry) {
-                Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-                String frontProd = resolveEnv(dotenv, "FRONTEND_ORIGIN").orElse("https://agro-link-jet.vercel.app");
-                String frontDev = resolveEnv(dotenv, "FRONTEND_ORIGIN_DEV").orElse("http://localhost:5173");
-
-                // Principal API
-                registry.addMapping("/api/**")
-                    .allowedOriginPatterns(frontProd, frontDev, "https://*.vercel.app")
-                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .exposedHeaders("Content-Disposition")
-                        .allowCredentials(true);
-
-                // Actuator y salud (para warm‑up y monitoreo desde frontend / edge)
-                registry.addMapping("/actuator/**")
-                    .allowedOriginPatterns(frontProd, frontDev, "https://*.vercel.app")
-                        .allowedMethods("GET", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(false);
-            }
-        };
-    }
+    // (WebMvcConfigurer removed)
 
     // CorsFilter global para asegurar CORS también en respuestas de error antes de llegar a MVC
     @Bean
