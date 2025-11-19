@@ -15,7 +15,7 @@ import org.springframework.lang.NonNull;
 import java.io.IOException;
 
 @Component
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order(Ordered.LOWEST_PRECEDENCE - 1) // Ejecuta antes que CorsDiagnosticsFilter para que su post-phase ocurra después del parche
 public class RequestLoggingFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
