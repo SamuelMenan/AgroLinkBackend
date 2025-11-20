@@ -58,6 +58,17 @@ public class AuthController {
         return new HttpEntity<>(payload, headers);
     }
 
+    private HttpEntity<Map<String, Object>> buildEntityNoVerify(Map<String, Object> payload) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("apikey", anonKey);
+        headers.set("Authorization", "Bearer " + anonKey);
+        // Disable email verification for direct registration
+        payload.put("email_confirm", true);
+        payload.put("skip_confirmation", true);
+        return new HttpEntity<>(payload, headers);
+    }
+
     @SuppressWarnings("null")
     private ResponseEntity<String> forwardPost(String url, Map<String, Object> payload) {
         if (!envConfigured()) return missingConfig();
@@ -92,7 +103,40 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ResponseEntity<String> signUp(@RequestBody Map<String, Object> payload) {
         String url = baseUrl + "/auth/v1/signup";
-        return forwardPost(url, payload);
+        
+        // Disable email verification - direct registration
+        payload.put("email_confirm", true);
+        payload.put("skip_confirmation", true);
+        
+        if (!envConfigured()) return missingConfig();
+        try {
+            long start = System.currentTimeMillis();
+            
+            // Use buildEntityNoVerify to ensure no email verification
+            HttpEntity<Map<String, Object>> entity = buildEntityNoVerify(payload);
+            ResponseEntity<String> resp = rest.postForEntity(url, entity, String.class);
+            
+            long took = System.currentTimeMillis() - start;
+            String path = url.replaceFirst("https?://[^/]+", "");
+            
+            // Log successful registration without verification
+            System.out.println("[AuthController] Direct registration POST " + path + " -> status=" + resp.getStatusCode().value() + " in " + took + "ms (email verification disabled)");
+            
+            return resp;
+        } catch (RestClientResponseException e) {
+            String path = url.replaceFirst("https?://[^/]+", "");
+            System.err.println("[AuthController] Direct registration POST " + path + " error status=" + e.getStatusCode().value() + " bodyLen=" + (e.getResponseBodyAsString()!=null? e.getResponseBodyAsString().length():0));
+            
+            // Propagate exact error from Supabase
+            return ResponseEntity.status(e.getStatusCode().value())
+                    .body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            String path = url.replaceFirst("https?://[^/]+", "");
+            System.err.println("[AuthController] Direct registration POST " + path + " exception: " + e.getClass().getSimpleName() + " -> " + e.getMessage());
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Direct registration error: " + e.getMessage());
+        }
     }
 
     @PostMapping("/refresh")
