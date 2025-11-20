@@ -104,11 +104,57 @@ public class AuthController {
     public ResponseEntity<String> signUp(@RequestBody Map<String, Object> payload) {
         String url = baseUrl + "/auth/v1/signup";
         
+        // Support phone-only registration - generate email from phone if needed
+        String email = (String) payload.get("email");
+        String phone = (String) payload.get("phone");
+        
+        if ((email == null || email.trim().isEmpty()) && (phone != null && !phone.trim().isEmpty())) {
+            // Generate email from phone for phone-only registration
+            String generatedEmail = phone.trim() + "@phone.user";
+            payload.put("email", generatedEmail);
+            System.out.println("[AuthController] Phone-only registration: generated email " + generatedEmail + " for phone " + phone);
+            email = generatedEmail; // Update email variable for existence check
+        }
+        
         // Disable email verification - direct registration
         payload.put("email_confirm", true);
         payload.put("skip_confirmation", true);
         
         if (!envConfigured()) return missingConfig();
+        
+        // Pre-registration existence check
+        if (email != null && !email.trim().isEmpty()) {
+            try {
+                System.out.println("[AuthController] Checking if user exists before registration for email: " + email);
+                
+                // Try to sign in to check if user exists
+                String checkUrl = baseUrl + "/auth/v1/token?grant_type=password";
+                Map<String, Object> checkPayload = Map.of(
+                    "email", email,
+                    "password", payload.get("password") // Use the same password for check
+                );
+                
+                ResponseEntity<String> checkResp = rest.postForEntity(checkUrl, buildEntity(checkPayload), String.class);
+                
+                // If we get here, sign-in succeeded - user exists
+                System.err.println("[AuthController] User already exists for email: " + email + " (sign-in succeeded)");
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                        .body("{\"code\":422,\"error_code\":\"user_already_exists\",\"msg\":\"User already registered\"}");
+                        
+            } catch (RestClientResponseException checkEx) {
+                if (checkEx.getStatusCode().value() == 400 || checkEx.getStatusCode().value() == 401) {
+                    // Sign-in failed - user doesn't exist or wrong password, proceed with registration
+                    System.out.println("[AuthController] User does not exist or invalid credentials for email: " + email + " (sign-in failed with " + checkEx.getStatusCode().value() + ")");
+                } else {
+                    // Other error during check, log but proceed with registration
+                    System.err.println("[AuthController] Unexpected error during user existence check for email: " + email + " status=" + checkEx.getStatusCode().value());
+                }
+            } catch (Exception checkEx) {
+                // Network or other error during check, log but proceed with registration
+                System.err.println("[AuthController] Exception during user existence check: " + checkEx.getClass().getSimpleName() + " -> " + checkEx.getMessage());
+            }
+        }
+        
         try {
             long start = System.currentTimeMillis();
             
