@@ -103,6 +103,7 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ResponseEntity<String> signUp(@RequestBody Map<String, Object> payload) {
         String url = baseUrl + "/auth/v1/signup";
+        System.out.println("[AuthController] Incoming sign-up request envConfigured=" + envConfigured() + " baseUrl=" + baseUrl + " anonKey.len=" + (anonKey!=null?anonKey.length():0));
         
         // Support phone-only registration - generate email from phone if needed
         String email = (String) payload.get("email");
@@ -135,9 +136,9 @@ public class AuthController {
                 );
                 
                 ResponseEntity<String> checkResp = rest.postForEntity(checkUrl, buildEntity(checkPayload), String.class);
-                
-                // If we get here, sign-in succeeded - user exists
-                System.err.println("[AuthController] User already exists for email: " + email + " (sign-in succeeded)");
+                int checkStatus = checkResp.getStatusCode().value();
+                // If we get here, sign-in succeeded - user exists (200 range)
+                System.err.println("[AuthController] User already exists for email: " + email + " (sign-in succeeded status=" + checkStatus + ")");
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                         .body("{\"code\":422,\"error_code\":\"user_already_exists\",\"msg\":\"User already registered\"}");
                         
@@ -166,7 +167,9 @@ public class AuthController {
             String path = url.replaceFirst("https?://[^/]+", "");
             
             // Log successful registration without verification
-            System.out.println("[AuthController] Direct registration POST " + path + " -> status=" + resp.getStatusCode().value() + " in " + took + "ms (email verification disabled)");
+            String body = resp.getBody();
+            int bodyLen = body == null ? 0 : body.length();
+            System.out.println("[AuthController] Direct registration POST " + path + " -> status=" + resp.getStatusCode().value() + " in " + took + "ms (email verification disabled) bodyLen=" + bodyLen);
             
             return resp;
         } catch (RestClientResponseException e) {
@@ -179,6 +182,7 @@ public class AuthController {
         } catch (Exception e) {
             String path = url.replaceFirst("https?://[^/]+", "");
             System.err.println("[AuthController] Direct registration POST " + path + " exception: " + e.getClass().getSimpleName() + " -> " + e.getMessage());
+            e.printStackTrace();
             
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Direct registration error: " + e.getMessage());
