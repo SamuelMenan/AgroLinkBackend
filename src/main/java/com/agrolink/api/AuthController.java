@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -21,6 +24,8 @@ public class AuthController {
     private final String baseUrl;
     private final String anonKey;
     private final RestTemplate rest;
+    private final String hcaptchaSecret;
+    private final String recaptchaSecret;
 
     public AuthController() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -28,6 +33,10 @@ public class AuthController {
         String anon = resolveEnv(dotenv, "SUPABASE_ANON_KEY");
         this.baseUrl = url == null ? "" : url.trim();
         this.anonKey = anon == null ? "" : anon.trim();
+        String hc = resolveEnv(dotenv, "HCAPTCHA_SECRET");
+        this.hcaptchaSecret = hc == null ? "" : hc.trim();
+        String rc = resolveEnv(dotenv, "RECAPTCHA_SECRET");
+        this.recaptchaSecret = rc == null ? "" : rc.trim();
         SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
         rf.setConnectTimeout(5000);
         rf.setReadTimeout(10000);
@@ -95,8 +104,77 @@ public class AuthController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<String> signIn(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<String> signIn(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
         String url = baseUrl + "/auth/v1/token?grant_type=password";
+        if (recaptchaSecret != null && !recaptchaSecret.isBlank()) {
+            Object tokenObj = payload.get("recaptcha_token");
+            if (tokenObj == null) tokenObj = payload.get("captcha_token");
+            String token = tokenObj == null ? null : tokenObj.toString().trim();
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("{\"error\":\"missing_recaptcha_token\"}");
+            }
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+                form.add("secret", recaptchaSecret);
+                form.add("response", token);
+                String ip = request.getRemoteAddr();
+                if (ip != null && !ip.isBlank()) form.add("remoteip", ip);
+                HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
+                ResponseEntity<Map> verifyResp = rest.postForEntity("https://www.google.com/recaptcha/api/siteverify", entity, Map.class);
+                Map body = verifyResp.getBody();
+                Object success = body == null ? null : body.get("success");
+                boolean ok = (success instanceof Boolean) ? ((Boolean) success) : false;
+                if (!ok) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body("{\"error\":\"recaptcha_failed\"}");
+                }
+            } catch (RestClientResponseException e) {
+                return ResponseEntity.status(e.getStatusCode().value())
+                        .body(e.getResponseBodyAsString());
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body("{\"error\":\"recaptcha_verify_error\",\"detail\":\"" + e.getMessage() + "\"}");
+            }
+            payload.remove("recaptcha_token");
+            payload.remove("captcha_token");
+        } else if (hcaptchaSecret != null && !hcaptchaSecret.isBlank()) {
+            Object tokenObj = payload.get("hcaptcha_token");
+            if (tokenObj == null) tokenObj = payload.get("captcha_token");
+            String token = tokenObj == null ? null : tokenObj.toString().trim();
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("{\"error\":\"missing_hcaptcha_token\"}");
+            }
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+                form.add("secret", hcaptchaSecret);
+                form.add("response", token);
+                String ip = request.getRemoteAddr();
+                if (ip != null && !ip.isBlank()) form.add("remoteip", ip);
+                HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
+                ResponseEntity<Map> verifyResp = rest.postForEntity("https://hcaptcha.com/siteverify", entity, Map.class);
+                Map body = verifyResp.getBody();
+                Object success = body == null ? null : body.get("success");
+                boolean ok = (success instanceof Boolean) ? ((Boolean) success) : false;
+                if (!ok) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body("{\"error\":\"hcaptcha_failed\"}");
+                }
+            } catch (RestClientResponseException e) {
+                return ResponseEntity.status(e.getStatusCode().value())
+                        .body(e.getResponseBodyAsString());
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body("{\"error\":\"hcaptcha_verify_error\",\"detail\":\"" + e.getMessage() + "\"}");
+            }
+            payload.remove("hcaptcha_token");
+            payload.remove("captcha_token");
+        }
         return forwardPost(url, payload);
     }
 
