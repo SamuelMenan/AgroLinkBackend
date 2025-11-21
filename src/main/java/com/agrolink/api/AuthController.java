@@ -138,8 +138,8 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                         .body("{\"error\":\"recaptcha_verify_error\",\"detail\":\"" + e.getMessage() + "\"}");
             }
+            payload.put("captcha_token", token);
             payload.remove("recaptcha_token");
-            payload.remove("captcha_token");
         } else if (hcaptchaSecret != null && !hcaptchaSecret.isBlank()) {
             Object tokenObj = payload.get("hcaptcha_token");
             if (tokenObj == null) tokenObj = payload.get("captcha_token");
@@ -172,8 +172,8 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                         .body("{\"error\":\"hcaptcha_verify_error\",\"detail\":\"" + e.getMessage() + "\"}");
             }
+            payload.put("captcha_token", token);
             payload.remove("hcaptcha_token");
-            payload.remove("captcha_token");
         }
         return forwardPost(url, payload);
     }
