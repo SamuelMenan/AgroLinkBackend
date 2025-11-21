@@ -15,15 +15,21 @@ public class DeepseekController {
     private final String baseUrl;
     private final String apiKey;
     private final String model;
+    private final String referrer;
+    private final String siteTitle;
 
     public DeepseekController() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
         String b = resolveEnv(dotenv, "OPENROUTER_BASE_URL");
         String k = resolveEnv(dotenv, "OPENROUTER_API_KEY");
         String m = resolveEnv(dotenv, "OPENROUTER_MODEL");
+        String r = resolveEnv(dotenv, "OPENROUTER_REFERRER");
+        String t = resolveEnv(dotenv, "OPENROUTER_TITLE");
         this.baseUrl = (b == null || b.isBlank()) ? "https://openrouter.ai/api/v1" : b.trim();
         this.apiKey = (k == null) ? "" : k.trim();
         this.model = (m == null || m.isBlank()) ? "deepseek/deepseek-r1:free" : m.trim();
+        this.referrer = (r == null) ? "" : r.trim();
+        this.siteTitle = (t == null || t.isBlank()) ? "AgroLink" : t.trim();
 
         SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
         rf.setConnectTimeout(5000);
@@ -55,7 +61,8 @@ public class DeepseekController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + apiKey);
-            headers.set("X-Title", "AgroLink");
+            headers.set("X-Title", siteTitle);
+            if (!referrer.isBlank()) headers.set("HTTP-Referer", referrer);
 
             Map<String, Object> payload = new HashMap<>();
             payload.put("model", model);
