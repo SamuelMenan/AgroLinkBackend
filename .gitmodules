@@ -1,0 +1,3 @@
+[submodule "AgroLinkBackend"]
+	path = AgroLinkBackend
+	url = https://github.com/SamuelMenan/AgroLinkBackend
