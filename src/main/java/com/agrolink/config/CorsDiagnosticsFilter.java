@@ -28,7 +28,7 @@ public class CorsDiagnosticsFilter extends OncePerRequestFilter {
     private static final String frontDev;
     static {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-        frontProd = resolveEnv(dotenv, "FRONTEND_ORIGIN").orElse("https://agro-link-jet.vercel.app");
+        frontProd = resolveEnv(dotenv, "FRONTEND_ORIGIN").orElse("https://delicate-daifuku-92218d.netlify.app");
         frontDev = resolveEnv(dotenv, "FRONTEND_ORIGIN_DEV").orElse("http://localhost:5173");
     }
 

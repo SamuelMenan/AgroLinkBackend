@@ -38,7 +38,7 @@ public class OAuthController {
         String frontendOriginEnv = trim(dotenv.get("FRONTEND_ORIGIN"));
 
         String frontendOrigin = frontendOriginEnv.isBlank()
-                ? "https://agro-link-jet.vercel.app"
+                ? "https://delicate-daifuku-92218d.netlify.app"
                 : frontendOriginEnv;
 
         if (supabaseUrl.isBlank()) {
@@ -94,7 +94,7 @@ public class OAuthController {
         if (redirectUri.isBlank()) {
             String frontendOriginEnv = trim(dotenv.get("FRONTEND_ORIGIN"));
             String frontendOrigin = frontendOriginEnv.isBlank()
-                    ? "https://agro-link-jet.vercel.app"
+                    ? "https://delicate-daifuku-92218d.netlify.app"
                     : frontendOriginEnv;
 
             redirectUri = UriComponentsBuilder.fromHttpUrl(frontendOrigin)
