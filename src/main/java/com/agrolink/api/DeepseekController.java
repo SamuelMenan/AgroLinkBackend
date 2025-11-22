@@ -5,6 +5,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import java.util.Objects;
 
 import java.util.*;
 
@@ -72,28 +74,33 @@ public class DeepseekController {
             payload.put("messages", messages);
 
             HttpEntity<Map<String, Object>> req = new HttpEntity<>(payload, headers);
-            String endpoint = baseUrl.replaceAll("/+$", "") + "/chat/completions";
-            ResponseEntity<Map> resp = rest.postForEntity(endpoint, req, Map.class);
+            String endpoint = baseUrl.replaceAll("/+$$", "") + "/chat/completions";
+            ResponseEntity<Map<String, Object>> resp = rest.exchange(
+                    endpoint,
+                    Objects.requireNonNull(HttpMethod.POST),
+                    req,
+                    new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
 
             if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                         .body(Map.of("error", "Fallo al obtener respuesta de OpenRouter"));
             }
 
-            Map<String, Object> bodyMap = (Map<String, Object>) resp.getBody();
-            List<Map<String, Object>> choices = (List<Map<String, Object>>) bodyMap.get("choices");
+            Map<?, ?> bodyMap = resp.getBody();
+            Object choicesObj = bodyMap == null ? null : bodyMap.get("choices");
+            List<?> choices = (choicesObj instanceof List) ? (List<?>) choicesObj : java.util.Collections.emptyList();
             String text = "";
-            if (choices != null && !choices.isEmpty()) {
-                Map<String, Object> msg = (Map<String, Object>) choices.get(0).get("message");
-                if (msg != null) {
-                    Object content = msg.get("content");
-                    text = content == null ? "" : content.toString();
-                }
+            if (!choices.isEmpty()) {
+                Object first = choices.get(0);
+                Map<?, ?> msg = (first instanceof Map) ? (Map<?, ?>) ((Map<?, ?>) first).get("message") : java.util.Collections.emptyMap();
+                Object content = msg instanceof Map ? ((Map<?, ?>) msg).get("content") : null;
+                text = content == null ? "" : content.toString();
             }
 
             Map<String, Object> result = new HashMap<>();
             result.put("output_text", text);
-            result.put("usage", bodyMap.get("usage"));
+            result.put("usage", bodyMap == null ? null : bodyMap.get("usage"));
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

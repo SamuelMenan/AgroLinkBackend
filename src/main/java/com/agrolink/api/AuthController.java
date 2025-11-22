@@ -2,6 +2,7 @@ package com.agrolink.api;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.core.ParameterizedTypeReference;
+import java.util.Objects;
 
 import com.agrolink.api.dto.UserDto;
 
@@ -123,8 +126,13 @@ public class AuthController {
                 String ip = request.getRemoteAddr();
                 if (ip != null && !ip.isBlank()) form.add("remoteip", ip);
                 HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
-                ResponseEntity<Map> verifyResp = rest.postForEntity("https://www.google.com/recaptcha/api/siteverify", entity, Map.class);
-                Map body = verifyResp.getBody();
+                ResponseEntity<Map<String, Object>> verifyResp = rest.exchange(
+                        "https://www.google.com/recaptcha/api/siteverify",
+                        Objects.requireNonNull(HttpMethod.POST),
+                        entity,
+                        new ParameterizedTypeReference<Map<String, Object>>() {}
+                );
+                Map<String, Object> body = verifyResp.getBody();
                 Object success = body == null ? null : body.get("success");
                 boolean ok = (success instanceof Boolean) ? ((Boolean) success) : false;
                 if (!ok) {
@@ -157,8 +165,13 @@ public class AuthController {
                 String ip = request.getRemoteAddr();
                 if (ip != null && !ip.isBlank()) form.add("remoteip", ip);
                 HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
-                ResponseEntity<Map> verifyResp = rest.postForEntity("https://hcaptcha.com/siteverify", entity, Map.class);
-                Map body = verifyResp.getBody();
+                ResponseEntity<Map<String, Object>> verifyResp = rest.exchange(
+                        "https://hcaptcha.com/siteverify",
+                        Objects.requireNonNull(HttpMethod.POST),
+                        entity,
+                        new ParameterizedTypeReference<Map<String, Object>>() {}
+                );
+                Map<String, Object> body = verifyResp.getBody();
                 Object success = body == null ? null : body.get("success");
                 boolean ok = (success instanceof Boolean) ? ((Boolean) success) : false;
                 if (!ok) {
@@ -174,6 +187,16 @@ public class AuthController {
             }
             payload.put("captcha_token", token);
             payload.remove("hcaptcha_token");
+        } else {
+            Object tokenObj = payload.get("recaptcha_token");
+            if (tokenObj == null) tokenObj = payload.get("hcaptcha_token");
+            if (tokenObj == null) tokenObj = payload.get("captcha_token");
+            if (tokenObj != null) {
+                String token = tokenObj.toString().trim();
+                if (!token.isEmpty()) {
+                    payload.put("captcha_token", token);
+                }
+            }
         }
         return forwardPost(url, payload);
     }

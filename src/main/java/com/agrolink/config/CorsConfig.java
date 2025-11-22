@@ -28,6 +28,9 @@ public class CorsConfig {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.addAllowedOriginPattern(frontProd);
         cfg.addAllowedOriginPattern(frontDev);
+        cfg.addAllowedOriginPattern("http://localhost:*");
+        cfg.addAllowedOriginPattern("http://127.0.0.1:*");
+        cfg.addAllowedOriginPattern("http://localhost:5174");
         cfg.addAllowedOriginPattern("https://*.vercel.app");
         cfg.addAllowedHeader(CorsConfiguration.ALL);
         cfg.addExposedHeader("Content-Disposition");
