@@ -77,12 +77,28 @@ public class OAuthController {
                 .build()
                 .toUriString();
 
-        String authorizeUrl = supabaseUrl + "/auth/v1/authorize?provider=" +
-                url(provider) + "&redirect_to=" + url(finalRedirectTo);
+        // Validate that the finalRedirectTo is a proper URL
+        try {
+            new java.net.URL(finalRedirectTo);
+            System.out.println("[OAuth Debug] finalRedirectTo is valid URL: " + finalRedirectTo);
+        } catch (Exception e) {
+            System.out.println("[OAuth Debug] finalRedirectTo is invalid URL: " + finalRedirectTo + " error: " + e.getMessage());
+        }
+
+        // Use UriComponentsBuilder to properly construct the authorize URL
+        String authorizeUrl = UriComponentsBuilder.fromHttpUrl(supabaseUrl)
+                .path("/auth/v1/authorize")
+                .queryParam("provider", provider)
+                .queryParam("redirect_to", finalRedirectTo)
+                .build()
+                .toUriString();
 
         // Debug logging
         System.out.println("[OAuth Debug] finalRedirectTo: " + finalRedirectTo);
+        System.out.println("[OAuth Debug] url(finalRedirectTo): " + url(finalRedirectTo));
         System.out.println("[OAuth Debug] authorizeUrl: " + authorizeUrl);
+        System.out.println("[OAuth Debug] provider: " + provider);
+        System.out.println("[OAuth Debug] url(provider): " + url(provider));
 
         response.setStatus(HttpStatus.FOUND.value());
         response.setHeader("Location", authorizeUrl);
