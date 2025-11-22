@@ -128,6 +128,34 @@ public class AuthController {
         }
     }
 
+    private ResponseEntity<String> forwardPostService(String url, Map<String, Object> payload) {
+        if (!envConfigured()) return missingConfig();
+        if (serviceKey.isBlank()) return forwardPost(url, payload);
+        try {
+            long start = System.currentTimeMillis();
+            ResponseEntity<String> resp = rest.postForEntity(url, buildServiceEntity(payload), String.class);
+            long took = System.currentTimeMillis() - start;
+            String path = url.replaceFirst("https?://[^/]+", "");
+            System.out.println("[AuthController] POST(service) " + path + " -> status=" + resp.getStatusCode().value() + " in " + took + "ms");
+            return resp;
+        } catch (RestClientResponseException e) {
+            String path = url.replaceFirst("https?://[^/]+", "");
+            System.err.println("[AuthController] POST(service) " + path + " error status=" + e.getStatusCode().value() + " bodyLen=" + (e.getResponseBodyAsString()!=null? e.getResponseBodyAsString().length():0));
+            return ResponseEntity.status(e.getStatusCode().value()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            String path = url.replaceFirst("https?://[^/]+", "");
+            String errorId = UUID.randomUUID().toString();
+            Map<String, Object> safe = new HashMap<>(payload == null ? Map.of() : payload);
+            safe.remove("password");
+            safe.remove("recaptcha_token");
+            safe.remove("hcaptcha_token");
+            safe.remove("captcha_token");
+            log.error("[{}] POST(service) {} unexpected_failure: {}", errorId, path, e.getMessage(), e);
+            String body = String.format("{\"code\":503,\"error_code\":\"unexpected_failure\",\"message\":\"Fallo inesperado al procesar la solicitud\",\"error_id\":\"%s\"}", errorId);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+        }
+    }
+
     @PostMapping("/sign-in")
     public ResponseEntity<String> signIn(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
         String url = baseUrl + "/auth/v1/token?grant_type=password";
@@ -140,7 +168,7 @@ public class AuthController {
         }
         payload.remove("recaptcha_token");
         payload.remove("hcaptcha_token");
-        return forwardPost(url, payload);
+        return serviceKey.isBlank() ? forwardPost(url, payload) : forwardPostService(url, payload);
     }
 
     @PostMapping("/sign-up")
@@ -225,7 +253,7 @@ public class AuthController {
                 signPayload.put("password", Objects.requireNonNull(payload.get("password")).toString());
                 if (email != null && !email.trim().isEmpty()) signPayload.put("email", email.trim());
                 else if (phone != null && !phone.trim().isEmpty()) signPayload.put("phone", phone.trim());
-                ResponseEntity<String> resp = rest.postForEntity(baseUrl + "/auth/v1/token?grant_type=password", buildEntity(signPayload), String.class);
+                ResponseEntity<String> resp = rest.postForEntity(baseUrl + "/auth/v1/token?grant_type=password", buildServiceEntity(signPayload), String.class);
                 long took = System.currentTimeMillis() - start;
                 String path = url.replaceFirst("https?://[^/]+", "");
                 System.out.println("[AuthController] Admin registration + sign-in POST " + path + " -> status=" + resp.getStatusCode().value() + " in " + took + "ms bodyLen=" + (resp.getBody()!=null?resp.getBody().length():0));

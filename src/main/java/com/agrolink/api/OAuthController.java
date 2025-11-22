@@ -32,14 +32,14 @@ public class OAuthController {
     public void start(@RequestParam String provider,
                       @RequestParam(required = false, name = "next") String next,
                       @RequestParam(required = false, name = "redirect_to") String redirectTo,
+                      jakarta.servlet.http.HttpServletRequest request,
                       HttpServletResponse response) throws IOException {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
         String supabaseUrl = trim(dotenv.get("SUPABASE_URL"));
         String frontendOriginEnv = trim(dotenv.get("FRONTEND_ORIGIN"));
 
-        String frontendOrigin = frontendOriginEnv.isBlank()
-                ? "https://delicate-daifuku-92218d.netlify.app"
-                : frontendOriginEnv;
+        String computedOrigin = request.getScheme() + "://" + request.getServerName() + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : (":" + request.getServerPort()));
+        String frontendOrigin = frontendOriginEnv.isBlank() ? computedOrigin : frontendOriginEnv;
 
         // Debug logging
         System.out.println("[OAuth Debug] FRONTEND_ORIGIN from env: " + frontendOriginEnv);
