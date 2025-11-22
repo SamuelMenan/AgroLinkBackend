@@ -41,6 +41,11 @@ public class OAuthController {
                 ? "https://delicate-daifuku-92218d.netlify.app"
                 : frontendOriginEnv;
 
+        // Debug logging
+        System.out.println("[OAuth Debug] FRONTEND_ORIGIN from env: " + frontendOriginEnv);
+        System.out.println("[OAuth Debug] Using frontendOrigin: " + frontendOrigin);
+        System.out.println("[OAuth Debug] redirect_to parameter: " + redirectTo);
+
         if (supabaseUrl.isBlank()) {
             response.sendError(HttpStatus.SERVICE_UNAVAILABLE.value(), "Supabase URL no configurado");
             return;
@@ -53,12 +58,17 @@ public class OAuthController {
         String safeNext = sanitizeNext(next);
 
         // Base de callback: usar redirect_to si viene del cliente; si no, FRONTEND_ORIGIN
-        String callbackBase = (redirectTo != null && !redirectTo.isBlank())
-                ? redirectTo.trim()
-                : UriComponentsBuilder.fromHttpUrl(frontendOrigin)
+        String callbackBase;
+        if (redirectTo != null && !redirectTo.isBlank()) {
+            callbackBase = redirectTo.trim();
+            System.out.println("[OAuth Debug] Using redirect_to parameter: " + callbackBase);
+        } else {
+            callbackBase = UriComponentsBuilder.fromHttpUrl(frontendOrigin)
                     .path("/oauth/callback")
                     .build()
                     .toUriString();
+            System.out.println("[OAuth Debug] Using FRONTEND_ORIGIN: " + callbackBase);
+        }
 
         // Asegurar que enviamos ?next=... al callback del frontend
         String finalRedirectTo = UriComponentsBuilder.fromUriString(Objects.requireNonNull(callbackBase))
@@ -69,6 +79,10 @@ public class OAuthController {
 
         String authorizeUrl = supabaseUrl + "/auth/v1/authorize?provider=" +
                 url(provider) + "&redirect_to=" + url(finalRedirectTo);
+
+        // Debug logging
+        System.out.println("[OAuth Debug] finalRedirectTo: " + finalRedirectTo);
+        System.out.println("[OAuth Debug] authorizeUrl: " + authorizeUrl);
 
         response.setStatus(HttpStatus.FOUND.value());
         response.setHeader("Location", authorizeUrl);
