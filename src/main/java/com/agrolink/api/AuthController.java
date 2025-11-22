@@ -15,15 +15,20 @@ import org.springframework.util.MultiValueMap;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.core.ParameterizedTypeReference;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.agrolink.api.dto.UserDto;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final String baseUrl;
     private final String anonKey;
     private final RestTemplate rest;
@@ -100,9 +105,15 @@ public class AuthController {
                     .body(e.getResponseBodyAsString());
         } catch (Exception e) {
             String path = url.replaceFirst("https?://[^/]+", "");
-            System.err.println("[AuthController] POST " + path + " exception: " + e.getClass().getSimpleName() + " -> " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Auth proxy error: " + e.getMessage());
+            String errorId = UUID.randomUUID().toString();
+            Map<String, Object> safe = new HashMap<>(payload == null ? Map.of() : payload);
+            safe.remove("password");
+            safe.remove("recaptcha_token");
+            safe.remove("hcaptcha_token");
+            safe.remove("captcha_token");
+            log.error("[{}] POST {} unexpected_failure: {}", errorId, path, e.getMessage(), e);
+            String body = String.format("{\"code\":503,\"error_code\":\"unexpected_failure\",\"message\":\"Fallo inesperado al procesar la solicitud\",\"error_id\":\"%s\"}", errorId);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
         }
     }
 
@@ -205,7 +216,14 @@ public class AuthController {
     public ResponseEntity<String> signUp(@RequestBody Map<String, Object> payload) {
         String url = baseUrl + "/auth/v1/signup";
         System.out.println("[AuthController] Incoming sign-up request envConfigured=" + envConfigured() + " baseUrl=" + baseUrl + " anonKey.len=" + (anonKey!=null?anonKey.length():0));
-        
+
+        // Bypass temporal de captcha en registro: eliminar cualquier token si viniera del cliente
+        if (payload != null) {
+            payload.remove("recaptcha_token");
+            payload.remove("hcaptcha_token");
+            payload.remove("captcha_token");
+        }
+
         // Support phone-only registration - generate email from phone if needed
         String email = (String) payload.get("email");
         String phone = (String) payload.get("phone");
@@ -259,7 +277,7 @@ public class AuthController {
         
         try {
             long start = System.currentTimeMillis();
-            
+
             // Use buildEntityNoVerify to ensure no email verification
             HttpEntity<Map<String, Object>> entity = buildEntityNoVerify(payload);
             ResponseEntity<String> resp = rest.postForEntity(url, entity, String.class);
@@ -275,18 +293,26 @@ public class AuthController {
             return resp;
         } catch (RestClientResponseException e) {
             String path = url.replaceFirst("https?://[^/]+", "");
-            System.err.println("[AuthController] Direct registration POST " + path + " error status=" + e.getStatusCode().value() + " bodyLen=" + (e.getResponseBodyAsString()!=null? e.getResponseBodyAsString().length():0));
-            
-            // Propagate exact error from Supabase
-            return ResponseEntity.status(e.getStatusCode().value())
-                    .body(e.getResponseBodyAsString());
+            String body = e.getResponseBodyAsString();
+            String errorId = UUID.randomUUID().toString();
+            log.warn("[{}] sign-up upstream_error {}: status={} bodyLen={}", errorId, path, e.getStatusCode().value(), (body != null ? body.length() : 0));
+
+            // Mantener el status original de Supabase pero agregar un envoltorio con error_id
+            String safeMessage = "Fallo al registrar usuario";
+            String wrapped = String.format("{\"code\":%d,\"error_code\":\"upstream_error\",\"message\":\"%s\",\"error_id\":\"%s\",\"detail\":%s}",
+                    e.getRawStatusCode(), safeMessage, errorId, (body != null && body.trim().startsWith("{") ? body : ('\"' + body + '\"')));
+            return ResponseEntity.status(e.getStatusCode().value()).body(wrapped);
         } catch (Exception e) {
             String path = url.replaceFirst("https?://[^/]+", "");
-            System.err.println("[AuthController] Direct registration POST " + path + " exception: " + e.getClass().getSimpleName() + " -> " + e.getMessage());
-            e.printStackTrace();
-            
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Direct registration error: " + e.getMessage());
+            String errorId = UUID.randomUUID().toString();
+            Map<String, Object> safe = new HashMap<>(payload == null ? Map.of() : payload);
+            safe.remove("password");
+            safe.remove("recaptcha_token");
+            safe.remove("hcaptcha_token");
+            safe.remove("captcha_token");
+            log.error("[{}] sign-up unexpected_failure on {}: {}", errorId, path, e.getMessage(), e);
+            String body = String.format("{\"code\":503,\"error_code\":\"unexpected_failure\",\"message\":\"No se pudo completar el registro. Por favor, inténtalo más tarde\",\"error_id\":\"%s\"}", errorId);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
         }
     }
 

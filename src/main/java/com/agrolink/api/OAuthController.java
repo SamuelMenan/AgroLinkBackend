@@ -21,10 +21,10 @@ import java.util.Map;
 public class OAuthController {
 
     private static String sanitizeNext(String n) {
-        if (n == null || n.isBlank()) return "/simple";
-        if (!n.startsWith("/")) return "/simple";
-        if (n.startsWith("//")) return "/simple";
-        if (n.startsWith("/oauth/callback")) return "/simple";
+        if (n == null || n.isBlank()) return "/";
+        if (!n.startsWith("/")) return "/";
+        if (n.startsWith("//")) return "/";
+        if (n.startsWith("/oauth/callback")) return "/";
         return n;
     }
 
